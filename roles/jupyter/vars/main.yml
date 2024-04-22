@@ -1,0 +1,8 @@
+---
+# Jupyter
+jupyter_config_filename: '/home/cloud-user/.jupyter/jupyter_notebook_config.py'
+
+# Jupyter daemon
+jupyter_daemon_systemd_dir: '/usr/lib/systemd/system'
+jupyter_daemon_systemd_filename: '{{ jupyter_daemon_systemd_dir }}/jupyter.service'
+jupyter_daemon_pidfile: '/run/jupyter.service.pid'

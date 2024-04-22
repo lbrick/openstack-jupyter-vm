@@ -1,0 +1,44 @@
+---
+# Executable for the target Python installation.
+jupyter_python_executable: python
+
+# Package manager to use for Python package installation.
+# You might have pip or pip3 on the target machine.
+jupyter_package_manager: pip
+
+# Whether to run the package manager with elevated privileges.
+jupyter_package_manager_become: yes
+
+# Desired state for Jupyter-related Python packages.
+# You might want to use 'present' instead of 'latest'.
+jupyter_package_state: latest
+
+# The port Jupyter server will be listening on.
+jupyter_port: 8888
+
+# The IP address Jupyter server will bind to.
+jupyter_ip: 0.0.0.0
+
+# The default notebook password is 'jupyter' but should be overridden
+# with the one entered by the user (see 'jupyter_entered_password' below).
+jupyter_password: 'sha1:4d2b8146d2be:4657ba40edb745804804c6e53b388eb78d96c90b'
+
+# This variable should be used to override the default password.
+jupyter_plaintext_password: ''
+
+# Whether to open the browser when the Jupyter server is started.
+jupyter_open_browser: no
+
+# ----------------------------------
+# Jupyter daemon settings (optional)
+# ----------------------------------
+
+# Install Jupyter as a daemon.
+jupyter_daemon_enable: yes
+
+# The root directory that will be accessible in Jupyter tree.
+jupyter_daemon_document_root: '/home/cloud-user/'
+
+# Target system user/group for running the daemon.
+jupyter_daemon_user: '{{ ansible_user }}'
+jupyter_daemon_group: '{{ ansible_user }}'

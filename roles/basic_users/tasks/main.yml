@@ -1,0 +1,32 @@
+---    
+- name: Add keys to default user for extra users
+  ansible.posix.authorized_key:
+    user: "{{ default_user_name }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ default_user_keys | default([]) }}"
+  tags: users
+
+- name: Add users/groups
+  ansible.builtin.user: "{{ item }}"
+  loop: "{{ users }}"
+  tags: users
+  become: true
+
+- name: Add authorised keys
+  ansible.posix.authorized_key:
+    user: "{{ item.key }}"
+    key: "{{ item.value }}"
+  loop: "{{ user_keys | dict2items }}"
+  tags: users
+  when: "(users | items2dict(key_name='name', value_name='state'))[item.key] == 'present'"
+  become: true
+
+- name: Add additional authorised keys to user
+  ansible.posix.authorized_key:
+    user: "{{ item.key }}"
+    key: "{{ item.value }}"
+  loop: "{{ user_additional_keys | dict2items }}"
+  tags: users
+  when: "(users | items2dict(key_name='name', value_name='state'))[item.key] == 'present'"
+  become: true

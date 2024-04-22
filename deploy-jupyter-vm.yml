@@ -1,0 +1,21 @@
+---
+- name: Wait for Node
+  hosts: localhost
+  gather_facts: False
+  any_errors_fatal: "true"
+  roles:
+    - { role: infra/wait-for-hosts }
+
+# - name: Configure instance Users
+#   hosts: clients
+#   gather_facts: False
+#   any_errors_fatal: "true"
+#   roles:
+#     - { role: basic_users }
+
+- name: Configure Jupyter
+  hosts: clients
+  gather_facts: False
+  any_errors_fatal: "true"
+  roles:
+    - { role: jupyter_kahu }

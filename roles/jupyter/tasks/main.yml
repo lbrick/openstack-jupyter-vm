@@ -1,0 +1,89 @@
+---
+- name: Install pip
+  become: true
+  dnf:
+    name: python3-pip
+    state: present
+
+- name: Install Python packages
+  pip:
+    name: '{{ item }}'
+    state: '{{ jupyter_package_state }}'
+    executable: '{{ jupyter_package_manager }}'
+  with_items:
+    - jupyter
+
+- name: Generate Jupyter password
+  when: jupyter_plaintext_password != ''
+  block:
+    - name: Acquire Jupyter password hash
+      command: '{{ jupyter_python_executable }} -c "from notebook.auth import passwd; print(passwd(''{{ jupyter_plaintext_password }}''));"'
+      register: jupyter_password_output
+      no_log: true
+      changed_when: no
+
+    - name: Remember Jupyter password hash
+      set_fact:
+        jupyter_password: '{{ jupyter_password_output.stdout }}'
+      changed_when: no
+
+- name: Check if the Jupyter profile already exists
+  stat:
+    path: '{{ jupyter_config_filename }}'
+  register: jupyter_config_exists
+
+- name: Create Jupyter profile
+  shell: |
+    jupyter notebook --generate-config
+  when: not jupyter_config_exists.stat.exists
+
+- name: Apply Jupyter config - IP
+  ansible.builtin.lineinfile:
+    path: "{{ jupyter_config_filename }}"
+    regexp: '^c.ServerApp.ip = '
+    line: c.ServerApp.ip = '{{ jupyter_ip }}'
+
+- name: Apply Jupyter config - Password
+  ansible.builtin.lineinfile:
+    path: "{{ jupyter_config_filename }}"
+    regexp: '^c.ServerApp.password = '
+    line: c.ServerApp.password = '{{ jupyter_password }}'
+
+- name: Install Jupyter as a daemon
+  when: jupyter_daemon_enable
+  block:
+    - name: Find Jupyter server binary
+      command: which jupyter-notebook
+      register: jupyter_server_which_output
+      changed_when: no
+
+    - name: Initialize Jupyter server binary path
+      set_fact:
+        jupyter_daemon_executable: '{{ jupyter_server_which_output.stdout }}'
+      changed_when: no
+
+    - name: Make sure systemd directory exists
+      become: true
+      file:
+        path: '{{ jupyter_daemon_systemd_dir }}'
+        state: directory
+
+    - name: Create systemd script
+      become: true
+      template:
+        src: jupyter.service.j2
+        dest: '{{ jupyter_daemon_systemd_filename }}'
+        force: yes
+
+    - name: Enable Jupyter daemon
+      become: true
+      shell: |
+        systemctl enable jupyter.service
+        systemctl daemon-reload
+        systemctl restart jupyter.service
+
+- name: Stop Firewalld
+  become: true
+  shell: |
+    systemctl stop firewalld
+
